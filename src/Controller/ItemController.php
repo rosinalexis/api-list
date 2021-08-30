@@ -13,57 +13,55 @@ use Symfony\Component\Routing\Annotation\Route;
 class ItemController extends AbstractController
 {
     /**
-     * @Route("/", name="app_home")
+     * @Route("api/item", name="app_item_liste",methods={"GET"})
      */
-    public function home(ItemRepository $repo): Response
+    public function liste(ItemRepository $repo): Response
     {
         $items = $repo->findAll();
+        
 
-        return $this->render('item/home.html.twig', compact('items'));
+        return $this->json($items);
     }
 
     /**
-     * @Route("/items/add", name="app_item_add")
+     * @Route("/api/item", name="app_item_ajouter",methods={"POST"})
      */
-    public function add(EntityManagerInterface $em, Request $request): Response
+    public function ajouter(EntityManagerInterface $em, Request $request): Response
     {
-        $title = $request->request->get('title'); 
+        $objet = json_decode($request ->getContent());
         
         $item = new Item();
-        $item->setTitle($title);
+        $item->setTitle($objet->titre);
         $item->setIsCheck(false);
+
         $em->persist($item);
         $em->flush();
 
-        return $this->redirectToRoute('app_home');
+        return $this->json($item);
     }
 
      /**
-     * @Route("/items/eddit/{id}", name="app_item_edit")
+     * @Route("api/item/{id}", name="app_item_modifier",methods={"PUT"})
      */
     public function edit(Item $item,EntityManagerInterface $em): Response
     {
-        if($item->getIsCheck() === true){
-            $item->setIsCheck(false);
-        }
-        else{
-            $item->setIsCheck(true);
-        }
-        
+        $etat = ! $item->getIsCheck(); 
+        $item->setIsCheck($etat);
+
         $em->flush();
         
-        return $this->redirectToRoute('app_home');
+        return $this->json($item);
     }
     
 
      /**
-     * @Route("/items/remove/{id}", name="app_item_remove")
+     * @Route("api/item/{id}", name="app_item_supprimer", methods={"DELETE"})
      */
-    public function remove(Item $item,EntityManagerInterface $em): Response
+    public function supprimer(Item $item,EntityManagerInterface $em): Response
     {
         $em->remove($item);
         $em->flush();
         
-        return $this->redirectToRoute('app_home');
+        return $this->json($item);
     }
 }
